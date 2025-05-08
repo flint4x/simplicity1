@@ -1,1 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simplicity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #1c1326 0%, #231534 100%);
+            color: #d8b9ff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        header {
+            text-align: center;
+            padding: 4rem 1rem;
+            background: #2a1a3d;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            text-shadow: 0 0 10px rgba(216, 185, 255, 0.3);
+        }
+        p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 2rem;
+            padding: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .game-button {
+            width: 160px;
+            height: 160px;
+            background: #2a1a3d;
+            border: none;
+            border-radius: 16px;
+            color: #d8b9ff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-button:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(75, 46, 131, 0.6);
+        }
+        .game-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(75, 46, 131, 0.4), transparent);
+            transition: left 0.6s ease;
+        }
+        .game-button:hover::before {
+            left: 100%;
+        }
+        .game-container {
+            display: none;
+            padding: 3rem;
+            max-width: 900px;
+            margin: 3rem auto;
+            background: #231534;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .game-container.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        canvas {
+            border: 2px solid #4b2e83;
+            background: #1c1326;
+            border-radius: 12px;
+            max-width: 100%;
+        }
+        .tictactoe-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            gap: 10px;
+            margin: 1.5rem auto;
+            width: fit-content;
+        }
+        .tictactoe-cell {
+            width: 120px;
+            height: 120px;
+            background: #2a1a3d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: #d8b9ff;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+        .tictactoe-cell:hover {
+            background: #3b255a;
+            transform: scale(1.05);
+        }
+        #game2048 {
+            width: 400px;
+            height: 400px;
+            background: #2a1a3d;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding: 12px;
+            margin: 1.5rem auto;
+            border-radius: 12px;
+        }
+        .tile {
+            background: #4b2e83;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: #d8b9ff;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+        .tile:not(:empty) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Simplicity Games</h1>
+        <p>Where retro meets futuristic finesse</p>
+    </header>
+    <main>
+        <section class="button-grid">
+            <button class="game-button" data-game="snake">Snake</button>
+            <button class="game-button" data-game="tictactoe">Tic-Tac-Toe</button>
+            <button class="game-button" data-game="2048">2048</button>
+            <button class="game-button" data-game="breakout">Breakout</button>
+            <button class="game-button" data-game="flappybird">Flappy Bird</button>
+        </section>
+        <!-- Game Containers -->
+        <div id="snake" class="game-container">
+            <h2>Snake</h2>
+            <canvas id="snakeCanvas" width="400" height="400"></canvas>
+        </div>
+        <div id="tictactoe" class="game-container">
+            <h2>Tic-Tac-Toe</h2>
+            <div id="tictactoeGrid" class="tictactoe-grid">
+                <div class="tictactoe-cell" data-index="0"></div>
+                <div class="tictactoe-cell" data-index="1"></div>
+                <div class="tictactoe-cell" data-index="2"></div>
+                <div class="tictactoe-cell" data-index="3"></div>
+                <div class="tictactoe-cell" data-index="4"></div>
+                <div class="tictactoe-cell" data-index="5"></div>
+                <div class="tictactoe-cell" data-index="6"></div>
+                <div class="tictactoe-cell" data-index="7"></div>
+                <div class="tictactoe-cell" data-index="8"></div>
+            </div>
+        </div>
+        <div id="2048" class="game-container">
+            <h2>2048</h2>
+            <div id="game2048"></div>
+        </div>
+        <div id="breakout" class="game-container">
+            <h2>Breakout</h2>
+            <canvas id="breakoutCanvas" width="480" height="320"></canvas>
+        </div>
+        <div id="flappybird" class="game-container">
+            <h2>Flappy Bird</h2>
+            <canvas id="flappyCanvas" width="400" height="600"></canvas>
+        </div>
+    </main>
+    <script>
+        // Toggle Games with Swagger
+        function showGame(gameId) {
+            document.querySelectorAll('.game-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            document.getElementById(gameId).classList.add('active');
+            console.log(`Yo, ${gameId} just dropped like a beat!`);
+        }
+        document.querySelectorAll('.game-button').forEach(button => {
+            button.addEventListener('click', () => {
+                showGame(button.getAttribute('data-game'));
+            });
+        });
 
+        // Snake (Jacked from Simplicity1 snake.html)
+        (function() {
+            const canvas = document.getElementById('snakeCanvas');
+            const ctx = canvas.getContext('2d');
+            const gridSize = 20;
+            let snake = [{ x: 10, y: 10 }];
+            let food = { x: 15, y: 15 };
+            let dx = 0;
+            let dy = 0;
+            let score = 0;
+            function drawGame() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                snake.forEach(segment => {
+                    ctx.fillStyle = '#d8b9ff';
+                    ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+                });
+                ctx.fillStyle = '#ff4d94';
+                ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+                const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+                snake.unshift(head);
+                if (head.x === food.x && head.y === food.y) {
+                    score += 10;
+                    food = { x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) };
+                } else {
+                    snake.pop();
+                }
+                if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) {
+                    snake = [{ x: 10, y: 10 }];
+                    dx = 0;
+                    dy = 0;
+                    score = 0;
+                }
+            }
+            document.addEventListener('keydown', e => {
+                switch (e.key) {
+                    case 'ArrowUp': if (dy !== 1) { dx = 0; dy = -1; } break;
+                    case 'ArrowDown': if (dy !== -1) { dx = 0; dy = 1; } break;
+                    case 'ArrowLeft': if (dx !== 1) { dx = -1; dy = 0; } break;
+                    case 'ArrowRight': if (dx !== -1) { dx = 1; dy = 0; } break;
+                }
+            });
+            setInterval(drawGame, 80);
+        })();
+
+        // Tic-Tac-Toe (Yoinked from Simplicity1 tictactoe.html)
+        (function() {
+            const cells = document.querySelectorAll('.tictactoe-cell');
+            let currentPlayer = 'X';
+            let board = ['', '', '', '', '', '', '', '', ''];
+            cells.forEach(cell => {
+                cell.addEventListener('click', () => {
+                    const index = cell.getAttribute('data-index');
+                    if (board[index] === '') {
+                        board[index] = currentPlayer;
+                        cell.textContent = currentPlayer;
+                        if (checkWin()) {
+                            resetBoard();
+                        } else if (board.every(cell => cell !== '')) {
+                            resetBoard();
+                        } else {
+                            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                        }
+                    }
+                });
+            });
+            function checkWin() {
+                const winConditions = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                    [0, 4, 8], [2, 4, 6]
+                ];
+                return winConditions.some(condition =>
+                    condition.every(index => board[index] === currentPlayer)
+                );
+            }
+            function resetBoard() {
+                board = ['', '', '', '', '', '', '', '', ''];
+                cells.forEach(cell => (cell.textContent = ''));
+                currentPlayer = 'X';
+            }
+        })();
+
+        // 2048 (Based on Simplicity1 2048.html)
+        (function() {
+            const grid = document.getElementById('game2048');
+            let board = [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0]
+            ];
+            function drawBoard() {
+                grid.innerHTML = '';
+                board.forEach(row => {
+                    row.forEach(value => {
+                        const tile = document.createElement('div');
+                        tile.className = 'tile';
+                        tile.textContent = value || '';
+                        grid.appendChild(tile);
+                    });
+                });
+            }
+            function addTile() {
+                let empty = [];
+                board.forEach((row, i) => {
+                    row.forEach((val, j) => {
+                        if (val === 0) empty.push({ x: i, y: j });
+                    });
+                });
+                if (empty.length) {
+                    const { x, y } = empty[Math.floor(Math.random() * empty.length)];
+                    board[x][y] = Math.random() < 0.9 ? 2 : 4;
+                }
+            }
+            document.addEventListener('keydown', e => {
+                // Needs full merge logic from 2048.html
+                if (e.key === 'ArrowRight') {
+                    addTile();
+                    drawBoard();
+                }
+            });
+            addTile();
+            drawBoard();
+        })();
+
+        // Breakout (Straight from Simplicity1 breakout.html)
+        (function() {
+            const canvas = document.getElementById('breakoutCanvas');
+            const ctx = canvas.getContext('2d');
+            let ballX = canvas.width / 2;
+            let ballY = canvas.height - 30;
+            let dx = 2;
+            let dy = -2;
+            let paddleX = (canvas.width - 75) / 2;
+            const paddleWidth = 75;
+            const paddleHeight = 10;
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                ctx.arc(ballX, ballY, 10, 0, Math.PI * 2);
+                ctx.fillStyle = '#d8b9ff';
+                ctx.fill();
+                ctx.closePath();
+                ctx.fillStyle = '#d8b9ff';
+                ctx.fillRect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+                ballX += dx;
+                ballY += dy;
+                if (ballX < 0 || ballX > canvas.width) dx = -dx;
+                if (ballY < 0) dy = -dy;
+                if (ballY > canvas.height) {
+                    ballX = canvas.width / 2;
+                    ballY = canvas.height - 30;
+                    dx = 2;
+                    dy = -2;
+                }
+                if (ballY > canvas.height - paddleHeight && ballX > paddleX && ballX < paddleX + paddleWidth) {
+                    dy = -dy;
+                }
+            }
+            document.addEventListener('mousemove', e => {
+                const relativeX = e.clientX - canvas.offsetLeft;
+                if (relativeX > 0 && relativeX < canvas.width) {
+                    paddleX = relativeX - paddleWidth / 2;
+                }
+            });
+            setInterval(draw, 10);
+        })();
+
+        // Flappy Bird (Ripped from Simplicity1 flappybird.html)
+        (function() {
+            const canvas = document.getElementById('flappyCanvas');
+            const ctx = canvas.getContext('2d');
+            let birdY = canvas.height / 2;
+            let velocity = 0;
+            let gravity = 0.5;
+            let pipes = [];
+            let frame = 0;
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#d8b9ff';
+                ctx.fillRect(50, birdY, 20, 20);
+                velocity += gravity;
+                birdY += velocity;
+                if (frame % 100 === 0) {
+                    pipes.push({ x: canvas.width, gap: 200 });
+                }
+                pipes.forEach(pipe => {
+                    pipe.x -= 2;
+                    ctx.fillStyle = '#ff4d94';
+                    ctx.fillRect(pipe.x, 0, 50, pipe.gap);
+                    ctx.fillRect(pipe.x, pipe.gap + 150, 50, canvas.height);
+                });
+                if (birdY > canvas.height || birdY < 0) {
+                    birdY = canvas.height / 2;
+                    velocity = 0;
+                    pipes = [];
+                }
+                frame++;
+            }
+            document.addEventListener('keydown', e => {
+                if (e.key === ' ') velocity = -10;
+            });
+            setInterval(draw, 20);
+        })();
+    </script>
+</body>
+</html>
